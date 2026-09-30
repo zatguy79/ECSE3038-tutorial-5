@@ -21,3 +21,10 @@ class Device(BaseModel):
 
 
 # Your handlers go below this line.
+
+readings = []
+
+
+@app.get("/devices")
+def get_devices():
+    return list(devices.find({}, {"_id": 0}))
