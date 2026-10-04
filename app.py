@@ -49,3 +49,21 @@ def create_device(device: Device):
         )
     new_device.pop("_id")
     return new_device
+
+@app.put("/devices/{name}")
+def put_device(name: str, updated_device: Device):
+    device_data = updated_device.model_dump()
+
+    #Update the document in MongoDB
+    result = devices.find_one_and_update(
+        {"name": name},
+        {"$set": device_data},
+        return_document=True  # Returns the updated document
+    )
+
+    if not result:
+        raise HTTPException(status_code=404, detail=f"No device called {name}")
+
+    #Remove ObjectId so FastAPI can serialize the response cleanly
+    result.pop("_id", None)
+    return result
