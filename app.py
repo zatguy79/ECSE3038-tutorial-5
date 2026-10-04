@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 
 load_dotenv()
 client = MongoClient(os.getenv("MONGODB_URI"))
@@ -35,3 +36,16 @@ def get_device(name: str):
     if device is None:
         raise HTTPException(status_code=404, detail="No device called " + name)
     return device
+
+@app.post("/devices", status_code=201)
+def create_device(device: Device):
+    new_device = device.model_dump()
+    try:
+        devices.insert_one(new_device)    
+    except DuplicateKeyError:
+        raise HTTPException(
+            status_code=409,
+            detail=f"A device named '{device.name}' already exists."
+        )
+    new_device.pop("_id")
+    return new_device
