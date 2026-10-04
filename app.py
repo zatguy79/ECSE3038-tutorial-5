@@ -54,7 +54,6 @@ def create_device(device: Device):
 def put_device(name: str, updated_device: Device):
     device_data = updated_device.model_dump()
 
-    #Update the document in MongoDB
     result = devices.find_one_and_update(
         {"name": name},
         {"$set": device_data},
@@ -63,7 +62,14 @@ def put_device(name: str, updated_device: Device):
 
     if not result:
         raise HTTPException(status_code=404, detail=f"No device called {name}")
-
-    #Remove ObjectId so FastAPI can serialize the response cleanly
     result.pop("_id", None)
     return result
+
+@app.delete("/devices/{name}")
+def delete_device(name: str):
+    result = devices.delete_one({"name": name})
+
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail=f"No device called {name}")
+
+    return {"message": f"Successfully deleted device '{name}'"}
